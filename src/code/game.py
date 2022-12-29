@@ -32,17 +32,24 @@ class Game(object):
         self.bg_image_game = pygame.image.load('src/img/bg_game.jpg')
         self.load_game()
 
-    def load_settings(self, run, player, turn, bot):
+    def load_settings(self, run, player, turn, bot, effect_transition):
         self.game = True
         self.running_game = run
         self.player = player
         self.turn = turn
         self.bot = bot
-        self.cd_bot = FPS*4
+        self.cd_bot = FPS*12
         self.cd_bot_start = pygame.time.get_ticks()
 
+        self.effect_transition = effect_transition
+        self.cd_transition = COOLDOWN_TRANSITION*1
+        self.cd_transition_after = COOLDOWN_TRANSITION*2
+        self.running_transition = True
+        self.running_transition_after = True
+        self.running_transition_start = pygame.time.get_ticks()
 
     def load_game(self):
+        self.btn_to_menu = Button(40, 10, 280, 30, 'Вернуться в меню', 24, GREEN, GRAY, 'left', 2, WHITE)
         self.btn_new_game = Button(40, 470, 280, 80, 'НАЧАТЬ НОВУЮ ИГРУ', 24, GREEN, GRAY, 'left', 3, WHITE)
         self.btn_exit_game = Button(40, 570, 280, 80, 'ВЫЙТИ ИЗ ИГРЫ', 24, GREEN, GRAY, 'left', 3, WHITE)
 
@@ -100,27 +107,38 @@ class Game(object):
         self.board = Field(0, 0, 600, 600, WHITE, 'center', 3, GREEN)
 
     def run_game(self):
-        if pygame.time.get_ticks() - self.cd_bot_start >= self.cd_bot and self.game:
+        if self.running_transition:
+            if pygame.time.get_ticks() - self.running_transition_start >= self.cd_transition:
+                self.running_transition = False
+                # self.transition_clear_effects()
+        else :
+            if pygame.time.get_ticks() - self.cd_bot_start >= self.cd_bot and self.game:
 
-            if self.turn != self.player:
-                self.board_key = self.turn
-                for row in self.board.cells:
-                    for cell in row:
-                        self.board_key += cell.state
-                self.move_x, self.move_y = solve.get_move(self.board_key)
-                self.board.cells[self.move_x][self.move_y].update(self.bot)
-                self.turn = self.player
-                self.lbl_turn.change_text('Сейчас ходит: игрок')
-                click_sound = pygame.mixer.Sound('src/music/move.mp3')
-                pygame.mixer.Sound.play(click_sound)
-                self.cd_bot = 0
+                if self.turn != self.player:
+                    self.board_key = self.turn
+                    for row in self.board.cells:
+                        for cell in row:
+                            self.board_key += cell.state
+                    self.move_x, self.move_y = solve.get_move(self.board_key)
+                    self.board.cells[self.move_x][self.move_y].update(self.bot)
+                    self.turn = self.player
+                    self.lbl_turn.change_text('Сейчас ходит: игрок')
+                    click_sound = pygame.mixer.Sound('src/music/move.mp3')
+                    pygame.mixer.Sound.play(click_sound)
+                    self.cd_bot = 0
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
 
+            if self.running_transition:
+                continue
+
             if self.btn_exit_game.is_hovered():
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
             elif self.btn_new_game.is_hovered():
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            elif self.btn_to_menu.is_hovered():
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
             else:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -160,17 +178,19 @@ class Game(object):
                             # cooldewn
 
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                if self.btn_new_game.is_hovered():
-                    self.board.clear()
-                    self.game = True
-                    self.turn = 'X'
-                    self.cd_bot = FPS * 4
-                    self.cd_bot_start = pygame.time.get_ticks()
-                if self.btn_exit_game.is_hovered():
+                if self.btn_to_menu.is_hovered():
                     self.running_game = False
                     self.turn = 'X'
                     self.game = True
                     self.board.clear()
+                if self.btn_new_game.is_hovered():
+                    self.board.clear()
+                    self.game = True
+                    self.turn = 'X'
+                    self.cd_bot = FPS * 12
+                    self.cd_bot_start = pygame.time.get_ticks()
+                if self.btn_exit_game.is_hovered():
+                    sys.exit()
 
             if self.game:
                 if self.turn == self.player:
@@ -187,7 +207,7 @@ class Game(object):
                                         self.turn = self.bot
                                         self.lbl_turn.change_text('Сейчас ходит: бот')
                                         self.cd_bot_start = pygame.time.get_ticks()
-                                        self.cd_bot = FPS * 2
+                                        self.cd_bot = FPS * 8
 
 
             # фоновая заливка
@@ -201,46 +221,21 @@ class Game(object):
 
         # btn_test.draw(screen)
         # Frame UPDATE
+        if self.running_transition_after:
+            self.transition_update_effects()
+            if pygame.time.get_ticks() - self.running_transition_start >= self.cd_transition_after:
+                self.running_transition_after = False
         pygame.display.update()
 
         # print('Tick')
 
-        def game_draw_bg(self):
-            cur_bg_image = pygame.transform.scale(
-                self.bg_image_game, (self.screen_width, self.screen_height))
-            # scale_rect = scale.get_rect(center=(1280/2,720/2))
-            self.screen.blit(cur_bg_image, (0, 0))
-
-        def game_draw_widgets(self):
-            self.btn_new_game.draw(self.screen)
-            self.btn_exit_game.draw(self.screen)
-            self.board.draw(self.screen)
-            self.bg_rules.draw(self.screen)
-            for i in self.lbls_rules:
-                i.draw(self.screen)
-            self.bg_score.draw(self.screen)
-            for i in range(2):
-                self.lbls_loses[i].draw(self.screen)
-                self.lbls_draws[i].draw(self.screen)
-                self.lbls_wins[i].draw(self.screen)
-
-            self.lbl_cnt_loses.draw(self.screen)
-            self.lbl_cnt_draws.draw(self.screen)
-            self.lbl_cnt_wins.draw(self.screen)
-            self.lbl_turn.draw(self.screen)
-
-            self.field_decoration.draw(self.screen)
-
-            if not self.game:
-                self.lbl_message.draw(self.screen)
-
     def game_draw_bg(self):
         cur_bg_image = pygame.transform.scale(
             self.bg_image_game, (self.screen_width, self.screen_height))
-        # scale_rect = scale.get_rect(center=(1280/2,720/2))
         self.screen.blit(cur_bg_image, (0, 0))
 
     def game_draw_widgets(self):
+        self.btn_to_menu.draw(self.screen)
         self.btn_new_game.draw(self.screen)
         self.btn_exit_game.draw(self.screen)
         self.board.draw(self.screen)
@@ -266,3 +261,9 @@ class Game(object):
 
         if not self.game:
             self.lbl_message.draw(self.screen)
+
+    def transition_update_effects(self):
+        self.effect_transition.update(self.screen, 0)
+
+    def transition_clear_effects(self):
+        self.effect_transition.clear()

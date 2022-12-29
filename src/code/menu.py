@@ -22,8 +22,11 @@ class Menu:
         self.screen_height = 720
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         self.clock = pygame.time.Clock()
-
+        self.running_transition = False
+        self.running_transition_start = 0
         self.running_menu = False
+        self.cooldown_transition = COOLDOWN_TRANSITION
+        self.cooldown_transition_after = COOLDOWN_TRANSITION/2
         self.load_load()
     def load_load(self):
         self.bg_image_start = pygame.image.load('src/img/bg_start.jpg')
@@ -77,18 +80,31 @@ class Menu:
         self.btn_start = Button(0, -70, 270, 50, 'НАЧАТЬ ИГРУ', 40, WHITE, GRAY, 'center', 3, WHITE)
         self.btn_exit = Button(0, 150, 340, 60, 'ВЫЙТИ ИЗ ИГРЫ', 40, WHITE, GRAY, 'center', 3, WHITE)
 
-        self.radio_X = Radio(-60, 60, 100, 60, True, BLUE, WHITE, GRAY, 'center', 1, WHITE)
+        self.radio_X = Radio(-140, 60, 220, 60, True, BLUE, WHITE, GRAY, 'center', 1, WHITE)
+        self.lbl_X = Label(-150, 60, 0, 0, 'Крестики', MAIN_FONT, 24, WHITE, GRAY, 'center', 'center', 3,
+                                WHITE)
         # (self, x, y, width, height, active, on_color, off_color, bg_color, align='left', border_width=0,
         # border_color=WHITE):
-        self.img_X = Image(-40, 60, 50, 50, "src/img/star.gif", 'center')
+        self.img_X = Image(-60, 60, 50, 50, "src/img/star.gif", 'center')
 
-        self.radio_O = Radio(60, 60, 100, 60, False, BLUE, WHITE, GRAY, 'center', 1, WHITE)
-        self.img_O = Image(80, 60, 40, 50, "src/img/ball.gif", 'center')
+        self.radio_O = Radio(140, 60, 220, 60, False, BLUE, WHITE, GRAY, 'center', 1, WHITE)
+        self.lbl_O = Label(130, 60, 0, 0, 'Нолики', MAIN_FONT, 24, WHITE, GRAY, 'center', 'center', 3,
+                           WHITE)
+        self.img_O = Image(220, 60, 40, 50, "src/img/ball.gif", 'center')
 
     def run_menu(self):
+        if self.running_transition:
+            if pygame.time.get_ticks() - self.running_transition_start >= self.cooldown_transition:
+                self.running_menu = False
+                self.running_transition = False
+
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+
+            if self.running_transition:
+               continue
 
             if self.btn_start.is_hovered():
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -103,8 +119,10 @@ class Menu:
 
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
                 if self.btn_start.is_hovered():
-                    self.running_menu = False
-                    self.turn = 'X'
+                    self.running_transition = True
+                    self.running_transition_start = pygame.time.get_ticks()
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
                 if self.btn_exit.is_hovered():
                     sys.exit()
                 if self.radio_O.is_hovered():
@@ -127,10 +145,14 @@ class Menu:
         self.menu_update_effects()
 
         self.menu_draw_widgets_menu()
+        # if self.running_transition:
+        #     self.transition_update_effects()
         # btn_test.draw(screen)
         # Frame UPDATE
-        pygame.display.update()
+        if self.running_transition:
+            self.transition_update_effects()
 
+        pygame.display.update()
 
     def menu_draw_bg(self):
         cur_bg_image = pygame.transform.scale(
@@ -140,10 +162,16 @@ class Menu:
 
     def menu_load_effects(self):
         self.effect_snow = Snow(NUMBER_PARTICLES)
+        self.effect_transition = Snow(NUMBER_PARTICLES_TRANSITION, 0)
 
     def menu_update_effects(self):
         self.effect_snow.update(self.screen)
 
+    def transition_update_effects(self):
+        self.effect_transition.update(self.screen)
+
+    def transition_clear_effects(self):
+        self.effect_transition.clear()
     def menu_draw_widgets_load(self):
         self.lbl_header.draw(self.screen)
         self.lbl_loading.draw(self.screen)
@@ -153,8 +181,10 @@ class Menu:
         self.lbl_choose.draw(self.screen)
 
         self.radio_X.draw(self.screen)
+        self.lbl_X.draw(self.screen)
         self.img_X.draw(self.screen)
         self.radio_O.draw(self.screen)
+        self.lbl_O.draw(self.screen)
         self.img_O.draw(self.screen)
 
         self.btn_start.draw(self.screen)

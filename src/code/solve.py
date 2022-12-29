@@ -167,13 +167,13 @@ def get_move(cur_id):
 def random_move(cur_id):
 
     moves = []
-    print(cur_id)
+    # print(cur_id)
     for i in range(1,10):
         if cur_id [i] =='e':
             moves.append([int((i-1)/3),(i-1)%3])
     id = randint(0,len(moves)-1)
-    print(id)
-    print(len(moves))
+    # print(id)
+    # print(len(moves))
     x,y = moves[id][0],moves[id][1]
     return (x,y)
 
@@ -186,7 +186,7 @@ check_board()
 turn = 0
 game = 1
 players = ['X', 'O']
-print('start')
+# print('start')
 counter = 0
 
 '''crbrd = [['e','e','e'],['e','e','e'],['e','e','e']]
@@ -231,10 +231,10 @@ print_board(crbrd)'''
 #     turn ^= 1
 # print_board(main_board)
 def start_load():
-    print(len(States))
+    # print(len(States))
     preload_minimax(main_board,0,0)
 def half_load():
-    print(len(States))
+    # print(len(States))
     preload_minimax(main_board,1,0)
     fo=open("src/solve/solve.txt",'w')
     for i in States:
@@ -279,7 +279,7 @@ def load():
             values = []
         else:
             s+=i
-    print(len(read))
+    # print(len(read))
 # print('start')
 # k_games = 0
 def play_game():
@@ -287,7 +287,7 @@ def play_game():
         turn = 0
         # print(counter+1)
         print(players[turn], 'turn\nbefore')
-        print_board(main_board)
+        # print_board(main_board)
 
         if turn:
             while game:
@@ -313,12 +313,12 @@ def play_game():
 
         if check_board(main_board) != 'playing':
             res=check_board(main_board)
-            print(res)
+            # print(res)
             clear_board()
             if(res=='O'):
                 print("ERROR")
         turn ^= 1
-print_board(main_board)
+# print_board(main_board)
 '''
 0 0
 0 1

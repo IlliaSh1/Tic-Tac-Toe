@@ -41,16 +41,19 @@ class App:
         self.menu.run_load()
 
         self.menu.load_menu()
-        print(self.menu.running_menu)
         self.game.load_game()
         while True:
             if self.menu.running_menu:
                 self.menu.run_menu()
-                self.game.load_settings(not self.menu.running_menu, self.menu.player,self.menu.turn,self.menu.bot)
+
+                if not self.menu.running_menu:
+                    self.game.load_settings(not self.menu.running_menu, self.menu.player,self.menu.turn,self.menu.bot, self.menu.effect_transition)
+
             elif self.game.running_game:
                 self.game.run_game()
                 if not self.game.running_game:
                     self.menu.running_menu = True
+                    self.menu.transition_clear_effects()
             self.clock.tick(FPS)
 
 

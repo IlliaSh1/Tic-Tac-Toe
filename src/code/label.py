@@ -86,5 +86,3 @@ class Image(object):
         else:
             return False
 
-    def change_bg_img(self, color):
-        self.bg_color = color
