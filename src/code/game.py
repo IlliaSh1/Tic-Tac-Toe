@@ -107,6 +107,7 @@ class Game(object):
         self.board = Field(0, 0, 600, 600, WHITE, 'center', 3, GREEN)
 
     def run_game(self):
+
         if self.running_transition:
             if pygame.time.get_ticks() - self.running_transition_start >= self.cd_transition:
                 self.running_transition = False
@@ -179,12 +180,20 @@ class Game(object):
 
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
                 if self.btn_to_menu.is_hovered():
+                    if self.result == 'playing':
+                        self.cnt_loses+=1
+                        if self.cnt_loses <= 999:
+                            self.lbl_cnt_loses.change_text(str(self.cnt_loses))
                     self.running_game = False
                     self.turn = 'X'
                     self.game = True
                     self.board.clear()
                 if self.btn_new_game.is_hovered():
                     self.board.clear()
+                    if self.result == 'playing':
+                        self.cnt_loses += 1
+                        if self.cnt_loses <= 999:
+                            self.lbl_cnt_loses.change_text(str(self.cnt_loses))
                     self.game = True
                     self.turn = 'X'
                     self.cd_bot = FPS * 12
